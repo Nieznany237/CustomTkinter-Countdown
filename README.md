@@ -6,7 +6,7 @@ A simple countdown timer application built with Python 3.11 and CustomTkinter. T
 
 ## Examples
 
-Here are two examples of how the application looks:
+Here are examples of how the application looks:
 
 ![Example 1](examples/4.png)
 ![Example 2](examples/5.png)
