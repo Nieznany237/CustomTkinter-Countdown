@@ -1,21 +1,22 @@
 {
-  "VERSION": 8,
+  "VERSION": 9,
   "IGNORE_VERSION_ERROR": false,
   
   "FONT_SETTINGS": {
-    "default": ["Arial", 12],
+    "default": ["Arial", 14],
     "title": ["Arial", 23, "bold"],
     "countdown": ["Arial", 18],
     "units": ["Arial", 18],
-    "footer": ["Arial", 11, "italic"]
+    "footer": ["Arial", 11]
   },
   
   "APP_SETTINGS": {
     "title": "Countdown",
-    "window_size": "735x410",
+    "window_size": "735x420",
     "SetIcon": true,
     "resizable": [false, false],
-    "appearance_mode": "system",
+    "Language": "en",
+    "appearance_mode": "dark",
     "color_theme": "blue",
     "ui_zoom_factor": 1.075,
     "refresh_interval": 1000
@@ -25,11 +26,13 @@
     "dark": {
       "text_color": "#FFFFFF",
       "background_color": "#2E2E2E",
+      "date_frame_color": "#282828",
       "highlight_color": "#db143c"
     },
     "light": {
       "text_color": "#333333",
-      "background_color": "#F0F0F0",
+      "background_color": "#dbdbdb",
+      "date_frame_color": "#cecece",
       "highlight_color": "#E60000"
     }
   }
