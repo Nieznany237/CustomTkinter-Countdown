@@ -1,5 +1,9 @@
 # This file contains translations for the application in Polish and English.
-# Version polish 1.0
+
+# To use Polish, set "LANGUAGE": "pl" in the config file.
+# To use English, set "LANGUAGE": "en" in the config file.
+
+# Version polish 1.0.1
 TRANSLATIONS_PL = {
     "menubar": {
         "file": {
@@ -13,8 +17,8 @@ TRANSLATIONS_PL = {
             "appearance": "Wygląd",
             "dark_mode": "Dark Mode",
             "light_mode": "Light Mode",
-            "enlarge_UI": "Powiększ UI",
-            "shrink_UI": "Pomniejsz UI",
+            "zoom_in": "Powiększ UI",
+            "zoom_out": "Pomniejsz UI",
         },
         "settings": {
             "settings": "Ustawienia",
@@ -76,7 +80,7 @@ TRANSLATIONS_PL = {
 }
 
 # The English translation is the default one, so it doesn't need to be defined in the same way as the Polish one.
-# Version english 1.0
+# Version english 1.0.1
 TRANSLATIONS_EN = {
     "menubar": {
         "file": {
@@ -90,8 +94,8 @@ TRANSLATIONS_EN = {
             "appearance": "Appearance",
             "dark_mode": "Dark Mode",
             "light_mode": "Light Mode",
-            "enlarge_UI": "Zoom In",
-            "shrink_UI": "Zoom Out",
+            "zoom_in": "Zoom In",
+            "zoom_out": "Zoom Out",
         },
         "settings": {
             "settings": "Settings",
