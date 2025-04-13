@@ -15,12 +15,12 @@ REQUIRED_JSON_VERSION = 9
 
 # Application version and release date
 APP_VERSION = {
-    "version": "1.6.8",
-    "release_date": "11.04.2025"
+    "version": "1.6.9",
+    "release_date": "13.04.2025"
 }
 
 RESOURCE_FILE_PATHS = {
-    "json_config": r"Assets\Countdown\settingsV2.json"
+    "json_config": "Assets/Countdown/settingsV2.json"
 }
 
 # Default application settings
@@ -37,7 +37,7 @@ APP_SETTINGS = {
     "window_size": "735x420",
     "SetIcon": True,
     "resizable": [False, False],
-    "Language": "pl",
+    "Language": "en",
     "appearance_mode": "dark",
     "color_theme": "blue",
     "ui_zoom_factor": 1.075,
@@ -104,7 +104,7 @@ def get_program_path(show_messagebox=False):
             "Program Path", 
             f"Current program directory: {os.getcwd()}\n\n"
             f"Frozen? (PyInstaller) - {getattr(sys, 'frozen', False)}\n"
-            f"Compiled? (Nuitka) - {"__compiled__" in globals()}"
+            f"Compiled? (Nuitka) - {'__compiled__' in globals()}"
             )
 
 get_program_path()
@@ -237,13 +237,17 @@ def get_cache_info():
     print(t_path.cache_info())
 
 
-def open_settings_file_for_editing():
+def open_settings_file_for_editing(settings_path = RESOURCE_FILE_PATHS["json_config"]):
     """
     Opens the settingsV2.json file in the default system editor.
     Supports different operating systems and displays error messages in the messagebox.
     """
-    settings_path = RESOURCE_FILE_PATHS["json_config"]
 
+    """  
+    print("Exists:", os.path.exists(settings_path))
+    print("Is file:", os.path.isfile(settings_path))
+    print("Absolute path:", os.path.abspath(settings_path))
+    """
     try:
         if not os.path.exists(settings_path) or not os.path.isfile(settings_path):
             raise FileNotFoundError(f"Invalid file path: {settings_path}")
@@ -255,7 +259,7 @@ def open_settings_file_for_editing():
         # Open the file depending on your operating system
         system = platform.system()
         if system == 'Windows':
-            os.startfile(settings_path)
+            os.startfile(os.path.normpath(settings_path)) # For some reasons starfile likes to use backslash instead of forward slash
         elif system == 'Darwin':
             subprocess.run(['open', settings_path], check=True)
         elif system == 'Linux':
@@ -401,8 +405,8 @@ class CountdownApp:
         appearance_dropdown.add_option(option=t_path("menubar.appearance.dark_mode"), command=lambda: self.set_app_appearance_mode("dark"))
         appearance_dropdown.add_option(option=t_path("menubar.appearance.light_mode"), command=lambda: self.set_app_appearance_mode("light"))
         appearance_dropdown.add_separator()
-        appearance_dropdown.add_option(option=t_path("menubar.appearance.enlarge_UI"), command=lambda: change_ui_scale(0.1))
-        appearance_dropdown.add_option(option=t_path("menubar.appearance.shrink_UI"), command=lambda: change_ui_scale(-0.1))
+        appearance_dropdown.add_option(option=t_path("menubar.appearance.zoom_in"), command=lambda: change_ui_scale(0.1))
+        appearance_dropdown.add_option(option=t_path("menubar.appearance.zoom_out"), command=lambda: change_ui_scale(-0.1))
 
         # Sekcja Config 
         settings_button = self.menu.add_cascade(t_path("menubar.settings.settings"))
@@ -619,7 +623,7 @@ class CountdownApp:
         """
 
         now = datetime.now()
-        self.current_date_label.configure(text=f"{t_path("main_window.current_date_label")} {now.strftime('%d.%m.%Y %H:%M:%S')}")
+        self.current_date_label.configure(text=f"{t_path('main_window.current_date_label')} {now.strftime('%d.%m.%Y %H:%M:%S')}")
         
         # Check that all fields are filled in before converting to int
         try:
@@ -683,11 +687,11 @@ class CountdownApp:
         # Setting the label “time_left_label”
         if mode == "remaining":
             self.time_left_label.configure(
-                text=f"{t_path("main_window.remaining_text")} {year_text}, {months_text}, {weeks_text}, {days_text}, {hours_text}, {minutes_text} {t_path("main_window.and")} {seconds_text}"
+                text=f"{t_path('main_window.remaining_text')} {year_text}, {months_text}, {weeks_text}, {days_text}, {hours_text}, {minutes_text} {t_path('main_window.and')} {seconds_text}"
             )
         else:
             self.time_left_label.configure(
-                text=f"{t_path("main_window.elapsed_text")} {year_text}, {months_text}, {weeks_text}, {days_text}, {hours_text}, {minutes_text} {t_path("main_window.and")} {seconds_text}"
+                text=f"{t_path('main_window.elapsed_text')} {year_text}, {months_text}, {weeks_text}, {days_text}, {hours_text}, {minutes_text} {t_path('main_window.and')} {seconds_text}"
             )
 
         total_days = total_seconds / 86400 # 1 Day (24 * 60 * 60)
@@ -743,7 +747,7 @@ class AboutWindow(ctk.CTkToplevel):
     def __init__(self, master):
         super().__init__(master)
         self.title(t_path("about_window.about_window_title"))
-        self.geometry("490x335")
+        self.geometry("495x340")
         self.resizable(True, True)
 
         # Main container
