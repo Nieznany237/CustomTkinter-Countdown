@@ -1,4 +1,4 @@
-## Version: 1.6.9 [13.04.2025]
+## Version: 1.7.0 [15.04.2025]
 
 # CustomTkinter-Countdown
 
@@ -8,7 +8,6 @@ A versatile time calculator built with Python 3.13 and CustomTkinter that handle
 
 ## Required Libraries
 
-[comment]: <> (https://www.tablesgenerator.com/markdown_tables#)
 | Library                                                         | Purpose                    | Installation                  |
 |-----------------------------------------------------------------|----------------------------|-------------------------------|
 | [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) | Modern UI components       | `pip install customtkinter`   |

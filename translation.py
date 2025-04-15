@@ -3,14 +3,14 @@
 # To use Polish, set "LANGUAGE": "pl" in the config file.
 # To use English, set "LANGUAGE": "en" in the config file.
 
-# Version polish 1.0.1
+# Structure version 1.0.2
 TRANSLATIONS_PL = {
     "menubar": {
         "file": {
             "file": "Plik",
-            "load_file": "Wczytaj plik [Unfinished]",
-            "save_file": "Zapisz plik [Unfinished]",
-            "save_as": "Zapisz jako [Unfinished]",
+            "load_file": "Wczytaj plik",
+            "save_file": "Zapisz plik",
+            "save_as": "Zapisz jako",
             "exit": "Zakończ",
         },
         "appearance": {
@@ -80,14 +80,13 @@ TRANSLATIONS_PL = {
 }
 
 # The English translation is the default one, so it doesn't need to be defined in the same way as the Polish one.
-# Version english 1.0.1
 TRANSLATIONS_EN = {
     "menubar": {
         "file": {
             "file": "File",
-            "load_file": "Load File [Unfinished]",
-            "save_file": "Save File [Unfinished]",
-            "save_as": "Save As [Unfinished]",
+            "load_file": "Load File",
+            "save_file": "Save File",
+            "save_as": "Save As",
             "exit": "Exit",
         },
         "appearance": {

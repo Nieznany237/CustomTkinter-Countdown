@@ -9,14 +9,16 @@ from dateutil.relativedelta import relativedelta
 from functools import lru_cache
 from PIL import Image, ImageTk
 import customtkinter as ctk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from CTkMenuBar import *
 REQUIRED_JSON_VERSION = 9
 
+current_file_path = ""
+
 # Application version and release date
 APP_VERSION = {
-    "version": "1.6.9",
-    "release_date": "13.04.2025"
+    "version": "1.7.0",
+    "release_date": "15.04.2025"
 }
 
 RESOURCE_FILE_PATHS = {
@@ -68,6 +70,8 @@ FIELD_RANGES = {
     "second": (0, 59),
 }
 
+# Setting global program path for nuitka and pyinstaller have been archived because they do it already
+'''
 def set_global_program_path():
     # Check if the program is compiled
     is_nuitka = "__compiled__" in globals()
@@ -91,6 +95,7 @@ def set_global_program_path():
 
 # Force setting the working directory to the script's/executable's location
 set_global_program_path()
+'''
 
 def get_program_path(show_messagebox=False):
     # Print the current working directory (for debug purposes)
@@ -367,6 +372,129 @@ def change_ui_scale(scale=0):
     ctk.set_window_scaling(APP_SETTINGS["ui_zoom_factor"])
     ctk.set_widget_scaling(APP_SETTINGS["ui_zoom_factor"])
 
+# =============== Loading and Saving Files ===============
+
+def load_file_dialog(self):
+    file_path = filedialog.askopenfilename(filetypes=[("Countdown Files", "*.countdown")])
+    if file_path:
+        load_file(self, file_path)
+    else:
+        print("[INFO]: File dialog canceled by the user.")
+
+def load_file(self, file_path):
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            content = file.read().strip()
+            
+            # Parsing the date and updating the fields
+            dt = datetime.strptime(content, "%Y-%m-%d %H:%M:%S")
+            update_entries(self, dt)
+            # Storing the path of the loaded file
+            global current_file_path
+            current_file_path = file_path
+            print(f"Loaded: {dt} - {file_path}")
+    except Exception as e:
+        messagebox.showerror("Error", f"File loading error:\n{e}")
+    #print(current_file_path)
+
+def load_file_dialog(self):
+    file_path = filedialog.askopenfilename(filetypes=[("Countdown Files", "*.countdown")])
+    if file_path:
+        print(f"[debug_file] Selected file: {file_path}")  # Debug print
+        load_file(self, file_path)
+    else:
+        print("[INFO]: File dialog canceled by the user.")
+
+def load_file(self, file_path):
+    print(f"[debug_file] Attempting to load file: {file_path}")  # Debug print
+    try:
+        with open(file_path, "r", encoding="utf-8") as file:
+            content = file.read().strip()
+            print(f"[debug_file] File content: '{content}'")  # Debug print
+            
+            # Parsing the date and updating the fields
+            dt = datetime.strptime(content, "%Y-%m-%d %H:%M:%S")
+            print(f"[debug_file] Parsed datetime: {dt}")  # Debug print
+            update_entries(self, dt)
+            
+            # Storing the path of the loaded file
+            global current_file_path
+            current_file_path = file_path
+            print(f"[debug_file] Updated current_file_path to: {current_file_path}")  # Debug print
+            print(f"Loaded: {dt} - {file_path}")
+    except Exception as e:
+        print(f"[debug_file] Error loading file: {e}")  # Debug print
+        messagebox.showerror("Error", f"File loading error:\n{e}")
+
+def update_entries(self, dt):
+    debug_info = [
+        "---------[update_entries]---------",
+        f"Updating entries with datetime: {dt}",
+        f"{dt.strftime('%Y')}.{dt.strftime('%m')}.{dt.strftime('%d')} {dt.strftime('%H')}:{dt.strftime('%M')}:{dt.strftime('%S')}",
+        "----------------------------------",
+    ]
+    print('\n'.join(debug_info))
+    
+    self.target_year.delete(0, ctk.END)
+    self.target_year.insert(0, dt.strftime("%Y"))
+
+    self.target_month.delete(0, ctk.END)
+    self.target_month.insert(0, str(int(dt.strftime("%m"))))
+
+    self.target_day.delete(0, ctk.END)
+    self.target_day.insert(0, str(int(dt.strftime("%d"))))
+
+    self.target_hour.delete(0, ctk.END)
+    self.target_hour.insert(0, dt.strftime("%H"))
+
+    self.target_minute.delete(0, ctk.END)
+    self.target_minute.insert(0, dt.strftime("%M"))
+
+    self.target_second.delete(0, ctk.END)
+    self.target_second.insert(0, dt.strftime("%S"))
+
+def save_file(self, save_as=False):
+    print(f"[save_file] save_as flag: {save_as}")  # Debug print
+    global current_file_path
+    try:
+        # If it's not "Save As" and we have a path, use it
+        if not save_as and current_file_path:
+            file_path = current_file_path
+            print(f"[save_file] Using existing file path: {file_path}")  # Debug print
+        else:
+            print("[save_file_as] Prompting for new file path")  # Debug print
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".countdown", 
+                filetypes=[("Countdown Files", "*.countdown")]
+            )
+            if not file_path:
+                print("[save_file_as] Save dialog canceled")  # Debug print
+                return
+        
+        # Format the date string
+        date_str = (f"{self.target_year.get()}-{int(self.target_month.get()):02d}-"
+                    f"{int(self.target_day.get()):02d} {int(self.target_hour.get()):02d}:"
+                    f"{int(self.target_minute.get()):02d}:{int(self.target_second.get()):02d}")
+        print(f"[debug_file] Formatted date string: {date_str}")  # Debug print
+        
+        # Save to file
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(date_str)
+        
+        # Update the current file path
+        current_file_path = file_path
+        print(f"[debug_file] Updated current_file_path to: {current_file_path}")  # Debug print
+        print(f"Saved: {date_str} - {file_path}")
+        
+    except Exception as e:
+        print(f"[debug_file] Error saving file: {e}")  # Debug print
+        messagebox.showerror("Error", f"Failed to save file\n{e}")
+
+def save_file_as(self):
+    save_file(self,save_as=True)
+
+# =============== - ===============
+
 class CountdownApp:
     def __init__(self, root):
         ctk.set_appearance_mode(APP_SETTINGS["appearance_mode"])
@@ -377,8 +505,6 @@ class CountdownApp:
         self.root.geometry(APP_SETTINGS["window_size"])
         self.root.resizable(*APP_SETTINGS["resizable"])
         self.set_theme_colors()
-
-        #AboutWindow(root) # DEBUG
 
         # Better scaling of UI elements
         change_ui_scale()
@@ -392,10 +518,10 @@ class CountdownApp:
         # Sekcja File
         file_button = self.menu.add_cascade(t_path("menubar.file.file"))
         file_dropdown = CustomDropdownMenu(widget=file_button)
-        file_dropdown.add_option(option=t_path("menubar.file.load_file"), command=lambda: print("Open"))
-        file_dropdown.add_option(option=t_path("menubar.file.save_file"), command=lambda: print("Save"))
+        file_dropdown.add_option(option=t_path("menubar.file.load_file"), command=lambda: load_file_dialog(self))
+        file_dropdown.add_option(option=t_path("menubar.file.save_file"), command=lambda: save_file(self))
         file_dropdown.add_separator()
-        file_dropdown.add_option(option=t_path("menubar.file.save_as"), command=lambda: print("Save As"))
+        file_dropdown.add_option(option=t_path("menubar.file.save_as"), command=lambda: save_file_as(self))
         file_dropdown.add_separator()
         file_dropdown.add_option(option=t_path("menubar.file.exit"), command=lambda: self.root.quit())
 
@@ -534,6 +660,16 @@ class CountdownApp:
         # DEBUG
         print_app_settings()
         '''
+
+        # Check if the program was launched with a file
+        if len(sys.argv) > 1:
+            print("\nProgram launched with a file.\n")
+            try:
+                load_file(self, sys.argv[1])
+            except Exception as e:
+                print(f"Error while loading the file: {e}")
+        else:
+            print("\nProgram launched without a file.\n")
 
     def set_theme_colors(self):
             """
