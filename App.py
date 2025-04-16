@@ -965,7 +965,7 @@ class AboutWindow(ctk.CTkToplevel):
         {t_path("about_window.program_info_description.version")}: {APP_VERSION["version"]}
         {t_path("about_window.program_info_description.author")}: Niez | Nieznany237
         {t_path("about_window.program_info_description.release_date")}: {APP_VERSION["release_date"]}
-        {t_path("about_window.program_info_description.first_release")}: 3.10.2024
+        {t_path("about_window.program_info_description.first_release")}: 8.11.2024
         {t_path("about_window.program_info_description.licence")}: MIT
         
         Python: {self.get_python_version()}
