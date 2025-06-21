@@ -3,7 +3,6 @@ import os
 import platform
 import subprocess
 import sys
-import webbrowser
 import importlib
 from tkinter import messagebox, filedialog
 from datetime import datetime, timedelta
@@ -14,6 +13,8 @@ from PIL import Image, ImageTk
 import customtkinter as ctk
 from CTkMenuBar import CTkMenuBar, CustomDropdownMenu
 
+from modules.about_window import AboutWindow
+from modules.utils import  set_app_icon, get_program_path
 REQUIRED_JSON_VERSION = 9
 
 current_file_path = ""
@@ -99,21 +100,6 @@ def set_global_program_path():
 # Force setting the working directory to the script's/executable's location
 set_global_program_path()
 '''
-
-def get_program_path(show_messagebox=False):
-    # Print the current working directory (for debug purposes)
-    print("\n=== Debug: Program Path ===")
-    print("Current program directory:", os.getcwd())
-    print("Frozen? (PyInstaller)",getattr(sys, 'frozen', False))
-    print("Compiled? (Nuitka)", "__compiled__" in globals())
-    print("=== Debug: Program Path ===\n")
-    if show_messagebox:
-        messagebox.showinfo(
-            "Program Path", 
-            f"Current program directory: {os.getcwd()}\n\n"
-            f"Frozen? (PyInstaller) - {getattr(sys, 'frozen', False)}\n"
-            f"Compiled? (Nuitka) - {'__compiled__' in globals()}"
-            )
 
 get_program_path()
 
@@ -317,47 +303,6 @@ def open_settings_file_for_editing(settings_path = RESOURCE_FILE_PATHS["json_con
     except Exception as e:
         messagebox.showerror("Error", f"Unexpected error:\n{e}")
 
-def set_window_icon(app):
-    """
-    Function: set_window_icon(app)
-
-    Sets the application window icon based on the current system appearance mode (dark/light).
-    The function automatically selects the appropriate version of the icon (white for dark mode, dark for light mode).
-
-    Error Handling:
-    - Prints warning if icon file is not found
-    - Prints error if icon loading fails
-    - Silently continues if icon cannot be set (The default CTk icon will be used instead)
-    """
-
-    # Determine the appearance mode of the application
-    appearance_mode = ctk.get_appearance_mode()
-
-    # Selecting the appropriate icon
-    if appearance_mode == "Dark":
-        icon_path = "Assets/Countdown/Icons/white_icon1.png"
-    else:
-        icon_path = "Assets/Countdown/Icons/dark_icon1.png"
-
-    # Flag to check if the icon has been loaded
-    icon_loaded = False
-    
-    # Checking if the icon file exists
-    if os.path.exists(icon_path):
-        try:
-            icon_image = Image.open(icon_path)
-            icon_photo = ImageTk.PhotoImage(icon_image)
-            app.root.iconphoto(False, icon_photo)  # Setting the icon on the main window
-            icon_loaded = True
-        except Exception as e:
-            print(f"[ERROR] Failed to load icon: {e}")
-    else:
-        print(f"[WARNING] File {icon_path} has not been found.")
-
-    # Set icon only if loaded correctly
-    if icon_loaded:
-        app.root.wm_iconbitmap()
-
 def pluralize_time_unit(value, singular, plural, genitive):
 
     value = int(value)
@@ -503,7 +448,7 @@ class CountdownApp:
 
         # Setting the app icon
         if APP_SETTINGS["SetIcon"]:
-            set_window_icon(self)
+            set_app_icon(self)
 
         self.menu = CTkMenuBar(root, padx=0)
 
@@ -535,7 +480,7 @@ class CountdownApp:
         # Sekcja About
         about_button = self.menu.add_cascade(t_path("menubar.about.about"))
         about_dropdown = CustomDropdownMenu(widget=about_button)
-        about_dropdown.add_option(option=t_path("menubar.about.about_this_app"), command=lambda: AboutWindow(root))
+        about_dropdown.add_option(option=t_path("menubar.about.about_this_app"), command=lambda: AboutWindow(root, APP_SETTINGS, APP_VERSION, t_path))
         about_dropdown.add_separator()
         about_dropdown.add_option(option=t_path("menubar.about.get_program_path_debug"), command=lambda: get_program_path(True))
         about_dropdown.add_option(option=t_path("menubar.about.get_cache_info"), command=lambda: get_cache_info())
@@ -699,7 +644,7 @@ class CountdownApp:
         self.date_frame.configure(fg_color = self.date_frame_color)
         self.calculate_date.configure(text_color=self.highlight_color)
         if APP_SETTINGS["SetIcon"]:
-            set_window_icon(self)
+            set_app_icon(self)
 
 
     def create_target_entry(self, frame, default_value, column, label_text, field_type=None):
@@ -856,182 +801,6 @@ class CountdownApp:
                 f"{pluralize_time_unit(int(total_seconds), *get_plural_form_list('main_window.plural_forms.second'))}"
             )
         )
-        
-class AboutWindow(ctk.CTkToplevel):
-    def __init__(self, master):
-        super().__init__(master)
-        self.title(t_path("about_window.about_window_title"))
-        self.geometry("495x340")
-        self.resizable(True, True)
-
-        # Main container
-        self.main_container = ctk.CTkFrame(
-            self, 
-            border_width=1,
-        )
-        self.main_container.pack(padx=5, pady=5, fill="both", expand=True)
-        self.main_container.pack_propagate(False)
-        
-        # Content frame with two columns
-        self.content_frame = ctk.CTkFrame(self.main_container, fg_color="transparent")
-        self.content_frame.pack(padx=10, pady=10, fill="both", expand=True)
-        
-        # Left side: logo/image
-        self.left_panel = ctk.CTkFrame(self.content_frame, width=150, height=250, fg_color="transparent")
-        self.left_panel.grid(row=0, column=0, padx=(0, 15), pady=10, sticky="nsew")
-        
-        try:
-            app_icon_path = "Assets/Countdown/Icons/Countdown_dark_150.png"
-            app_icon_image = Image.open(app_icon_path)
-            
-            self.app_icon = ctk.CTkImage(
-                light_image=app_icon_image,
-                dark_image=app_icon_image,
-                size=(110, 110)
-            )
-            
-            self.icon_label = ctk.CTkLabel(self.left_panel, image=self.app_icon, text="")
-            self.icon_label.pack(pady=10)
-            
-        except Exception as e:
-            print(f"Image loading error: {e}")
-            self.icon_label = ctk.CTkLabel(
-                self.left_panel, 
-                text="Logo", 
-                width=150, 
-                height=150, 
-                corner_radius=10, 
-                fg_color="#f0f0f0", 
-                text_color="#333"
-            )
-            self.icon_label.pack(pady=10)
-
-        # GitHub icon and link
-
-        self.github_profile_label = self._create_clickable_link(
-            " Nieznany237", 
-            "https://github.com/Nieznany237"
-        )
-
-        self.github_repo_label = self._create_clickable_link(
-            " GitHub Repository", 
-            "https://github.com/Nieznany237/CustomTkinter-Countdown"
-        )
-        '''
-        self.other_link_label = self._create_clickable_link(
-            " Placeholder", 
-            "https://example.com",
-            "OtherIconLight.png",  # Ścieżki do alternatywnych ikon
-            "OtherIconDark.png"
-        )
-        '''
-        # Right side: information
-        self.right_panel = ctk.CTkFrame(self.content_frame, fg_color="transparent")
-        self.right_panel.grid(row=0, column=1, padx=(10, 0), pady=10, sticky="nsew")
-        
-        # Header
-        self.title_label = ctk.CTkLabel(
-            self.right_panel, 
-            text=APP_SETTINGS["title"], 
-            font=("Arial", 18, "bold")
-        )
-        self.title_label.pack(pady=(0, 0), anchor="w")
-        
-        # Program information
-        program_info = f"""
-        {t_path("about_window.program_info_description.program_name")}: {APP_SETTINGS["title"]}
-        {t_path("about_window.program_info_description.version")}: {APP_VERSION["version"]}
-        {t_path("about_window.program_info_description.author")}: Niez | Nieznany237
-        {t_path("about_window.program_info_description.release_date")}: {APP_VERSION["release_date"]}
-        {t_path("about_window.program_info_description.first_release")}: 8.11.2024
-        {t_path("about_window.program_info_description.licence")}: MIT
-        
-        Python: {self.get_python_version()}
-        System: {self.get_system_info()}
-        
-        {t_path("about_window.program_info_description.description")}:
-        A simple countdown timer application built
-        with Python and CustomTkinter. 
-        This application allows users to set a target 
-        date and time, displaying the remaining
-        or elapsedtime in various formats.
-        """
-        self.info_label = ctk.CTkLabel(
-            self.right_panel, 
-            font=FONT_SETTINGS["default"],
-            text=program_info, 
-            text_color=(
-                COLOR_SETTINGS["light"]["text_color"], 
-                COLOR_SETTINGS["dark"]["text_color"]), 
-            justify="left")
-        self.info_label.pack(pady=(0,0), anchor="w")
-    
-    def get_system_info(self):
-        """Returns operating system information with try-except protection"""
-        try:
-            system = platform.system()
-            version = ""
-            if system == "Windows":
-                version = platform.win32_ver()[1]
-            elif system == "Linux":
-                try:
-                    # For newer Linux systems
-                    version = platform.freedesktop_os_release().get('PRETTY_NAME', 'Linux')
-                except:
-                    version = 'Linux'
-            elif system == "Darwin":
-                version = f"macOS {platform.mac_ver()[0]}"
-            else:
-                version = ""
-                
-            return f"{system} {version}".strip()
-            
-        except Exception as e:
-            print(f"Error getting system information: {e}")
-            return platform.system() or "Unknown system"
-    
-    def get_python_version(self):
-        """Returns Python version with try-except protection"""
-        try:
-            return sys.version.split()[0]
-        except Exception as e:
-            print(f"Error getting Python version: {e}")
-            return "Unknown Python version"
-    
-    def _create_clickable_link(self, text, url, icon_light_path="Assets/Countdown/Icons/GitHubV2Dark.png", icon_dark_path="Assets/Countdown/Icons/GitHubV2White.png"):
-        """Helper function to create clickable link label with optional icon"""
-        try:
-            icon_light = Image.open(icon_light_path)
-            icon_dark = Image.open(icon_dark_path)
-            icon = ctk.CTkImage(
-                light_image=icon_light,
-                dark_image=icon_dark,
-                size=(22, 22)
-            )
-            
-            label = ctk.CTkLabel(
-                self.left_panel,
-                text=text,
-                font=("Arial", 13, "bold"),
-                image=icon,
-                compound="left",
-                cursor="hand2",
-                text_color=("#E60000", "#db143c")
-                #("#1a73e8", "#8ab4f8") # Legacy
-            )
-        except Exception as e:
-            print(f"Icon loading error: {e}")
-            label = ctk.CTkLabel(
-                self.left_panel,
-                text=text,
-                font=("Arial", 13),
-                cursor="hand2",
-                text_color=("#E60000","#db143c")
-            )
-    
-        label.pack(padx=(0, 0), pady=(0, 0), anchor="w")
-        label.bind("<Button-1>", lambda e: webbrowser.open_new_tab(url))
-        return label
 
 # Run the application
 root = ctk.CTk()
