@@ -4,13 +4,16 @@ import platform
 import subprocess
 import sys
 import webbrowser
+import importlib
+from tkinter import messagebox, filedialog
 from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
 from functools import lru_cache
+from dateutil.relativedelta import relativedelta
+
 from PIL import Image, ImageTk
 import customtkinter as ctk
-from tkinter import messagebox, filedialog
-from CTkMenuBar import *
+from CTkMenuBar import CTkMenuBar, CustomDropdownMenu
+
 REQUIRED_JSON_VERSION = 9
 
 current_file_path = ""
@@ -150,11 +153,11 @@ def load_settings_from_json(file_path = RESOURCE_FILE_PATHS["json_config"]):
     - COLOR_SETTINGS
     """
     global FONT_SETTINGS, APP_SETTINGS, COLOR_SETTINGS
-    
+
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             settings = json.load(f)
-        
+
         # Check the JSON version
         if "VERSION" in settings:
             json_version = settings["VERSION"]
@@ -168,7 +171,7 @@ def load_settings_from_json(file_path = RESOURCE_FILE_PATHS["json_config"]):
         else:
             print("[WARNING]: JSON version information missing. Default settings will be applied.")
             return
-        
+
         # Load font settings (convert lists to tuples for immutability)
         if "FONT_SETTINGS" in settings:
             FONT_SETTINGS = convert_font_lists_to_tuples(settings["FONT_SETTINGS"])
@@ -203,7 +206,6 @@ print("COLOR_SETTINGS:", COLOR_SETTINGS)
 '''
 print("Selected language:", APP_SETTINGS["Language"])
 # --- Translation loading from JSON and fallback to translation.py ---
-import importlib
 
 TRANSLATIONS = {}
 
@@ -330,13 +332,13 @@ def set_window_icon(app):
 
     # Determine the appearance mode of the application
     appearance_mode = ctk.get_appearance_mode()
-    
+
     # Selecting the appropriate icon
     if appearance_mode == "Dark":
         icon_path = "Assets/Countdown/Icons/white_icon1.png"
     else:
         icon_path = "Assets/Countdown/Icons/dark_icon1.png"
-    
+
     # Flag to check if the icon has been loaded
     icon_loaded = False
     
@@ -351,12 +353,13 @@ def set_window_icon(app):
             print(f"[ERROR] Failed to load icon: {e}")
     else:
         print(f"[WARNING] File {icon_path} has not been found.")
-    
+
     # Set icon only if loaded correctly
     if icon_loaded:
         app.root.wm_iconbitmap()
 
 def pluralize_time_unit(value, singular, plural, genitive):
+
     value = int(value)
     formatted_value = "{:,}".format(value).replace(",", " ")
     if value == 1:
@@ -385,29 +388,6 @@ def change_ui_scale(scale=0):
     ctk.set_widget_scaling(APP_SETTINGS["ui_zoom_factor"])
 
 # =============== Loading and Saving Files ===============
-
-def load_file_dialog(self):
-    file_path = filedialog.askopenfilename(filetypes=[("Countdown Files", "*.countdown")])
-    if file_path:
-        load_file(self, file_path)
-    else:
-        print("[INFO]: File dialog canceled by the user.")
-
-def load_file(self, file_path):
-    try:
-        with open(file_path, "r", encoding="utf-8") as file:
-            content = file.read().strip()
-            
-            # Parsing the date and updating the fields
-            dt = datetime.strptime(content, "%Y-%m-%d %H:%M:%S")
-            update_entries(self, dt)
-            # Storing the path of the loaded file
-            global current_file_path
-            current_file_path = file_path
-            print(f"Loaded: {dt} - {file_path}")
-    except Exception as e:
-        messagebox.showerror("Error", f"File loading error:\n{e}")
-    #print(current_file_path)
 
 def load_file_dialog(self):
     file_path = filedialog.askopenfilename(filetypes=[("Countdown Files", "*.countdown")])
@@ -446,7 +426,7 @@ def update_entries(self, dt):
         "----------------------------------",
     ]
     print('\n'.join(debug_info))
-    
+
     self.target_year.delete(0, ctk.END)
     self.target_year.insert(0, dt.strftime("%Y"))
 
@@ -476,28 +456,28 @@ def save_file(self, save_as=False):
         else:
             print("[save_file_as] Prompting for new file path")  # Debug print
             file_path = filedialog.asksaveasfilename(
-                defaultextension=".countdown", 
+                defaultextension=".countdown",
                 filetypes=[("Countdown Files", "*.countdown")]
             )
             if not file_path:
                 print("[save_file_as] Save dialog canceled")  # Debug print
                 return
-        
+
         # Format the date string
         date_str = (f"{self.target_year.get()}-{int(self.target_month.get()):02d}-"
                     f"{int(self.target_day.get()):02d} {int(self.target_hour.get()):02d}:"
                     f"{int(self.target_minute.get()):02d}:{int(self.target_second.get()):02d}")
         print(f"[debug_file] Formatted date string: {date_str}")  # Debug print
-        
+
         # Save to file
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(date_str)
-        
+
         # Update the current file path
         current_file_path = file_path
         print(f"[debug_file] Updated current_file_path to: {current_file_path}")  # Debug print
         print(f"Saved: {date_str} - {file_path}")
-        
+
     except Exception as e:
         print(f"[debug_file] Error saving file: {e}")  # Debug print
         messagebox.showerror("Error", f"Failed to save file\n{e}")
@@ -546,7 +526,7 @@ class CountdownApp:
         appearance_dropdown.add_option(option=t_path("menubar.appearance.zoom_in"), command=lambda: change_ui_scale(1))
         appearance_dropdown.add_option(option=t_path("menubar.appearance.zoom_out"), command=lambda: change_ui_scale(-1))
 
-        # Sekcja Config 
+        # Sekcja Config
         settings_button = self.menu.add_cascade(t_path("menubar.settings.settings"))
         settings_dropdown = CustomDropdownMenu(widget=settings_button)
         settings_dropdown.add_option(option=t_path("menubar.settings.open_config_file"), command=lambda: open_settings_file_for_editing())
@@ -567,11 +547,11 @@ class CountdownApp:
         )
 
         self.main_frame = ctk.CTkFrame(
-            root, 
+            root,
             #width=665,
             #height=375, # Legacy
             #height = int(APP_SETTINGS["window_size"].split("x")[1]) - 27,
-            fg_color=self.background_color, 
+            fg_color=self.background_color,
             border_width=1,
             #border_color="red"
         )
@@ -579,45 +559,45 @@ class CountdownApp:
         self.main_frame.pack(padx=(5), pady=(5,5), fill="both", expand=True)
 
         self.current_date_label = ctk.CTkLabel(
-            self.main_frame, 
-            text="current_date_label", 
+            self.main_frame,
+            text="current_date_label",
             font=FONT_SETTINGS["title"],
             text_color=self.text_color
         )
         self.current_date_label.pack(pady=(10,0))
 
         self.time_left_label = ctk.CTkLabel(
-            self.main_frame, 
-            text="time_left_label", 
+            self.main_frame,
+            text="time_left_label",
             font=FONT_SETTINGS["countdown"],
             text_color=self.text_color
         )
         self.time_left_label.pack(padx=5, pady=(5,5))
 
         self.total_time_label = ctk.CTkLabel(
-            self.main_frame, 
-            text="total_time_label", 
+            self.main_frame,
+            text="total_time_label",
             font=FONT_SETTINGS["units"],
             text_color=self.text_color,
         )
         self.total_time_label.pack(pady=(0,0))
 
         self.warning_label = ctk.CTkLabel(
-            self.main_frame, 
-            text=t_path("main_window.warning_label"), 
+            self.main_frame,
+            text=t_path("main_window.warning_label"),
             font=FONT_SETTINGS["footer"],
             text_color=self.text_color,
         )
         self.warning_label.pack(pady=(2,0))
 
         self.date_frame = ctk.CTkFrame(
-            self.main_frame, 
+            self.main_frame,
             fg_color = self.date_frame_color
             )
         self.date_frame.pack(side="bottom", pady=(0,10), anchor="s")
 
         self.calculate_date = ctk.CTkLabel(
-            self.main_frame, 
+            self.main_frame,
             text=t_path("main_window.calculate_date"),
             font=FONT_SETTINGS["title"],
             text_color=self.highlight_color
@@ -684,28 +664,28 @@ class CountdownApp:
             print("\nProgram launched without a file.\n")
 
     def set_theme_colors(self):
-            """
-            Sets widget colors based on current appearance mode (dark/light).
-            Updates text, background and highlight colors from global COLOR_SETTINGS.
-            """
-            # Get the current theme mode
-            current_theme = ctk.get_appearance_mode().lower()
+        """
+        Sets widget colors based on current appearance mode (dark/light).
+        Updates text, background and highlight colors from global COLOR_SETTINGS.
+        """
+        # Get the current theme mode
+        current_theme = ctk.get_appearance_mode().lower()
 
-            print(f"Current theme: {current_theme}\nSettings theme:", APP_SETTINGS["appearance_mode"])
-            
-            if current_theme == "dark":
-                self.text_color = COLOR_SETTINGS["dark"]["text_color"]
-                self.background_color = COLOR_SETTINGS["dark"]["background_color"]
-                self.date_frame_color = COLOR_SETTINGS["dark"]["date_frame_color"]
-                self.highlight_color = COLOR_SETTINGS["dark"]["highlight_color"]
-                #ctk.set_appearance_mode("dark")
+        print(f"Current theme: {current_theme}\nSettings theme:", APP_SETTINGS["appearance_mode"])
+        
+        if current_theme == "dark":
+            self.text_color = COLOR_SETTINGS["dark"]["text_color"]
+            self.background_color = COLOR_SETTINGS["dark"]["background_color"]
+            self.date_frame_color = COLOR_SETTINGS["dark"]["date_frame_color"]
+            self.highlight_color = COLOR_SETTINGS["dark"]["highlight_color"]
+            #ctk.set_appearance_mode("dark")
 
-            else:
-                self.text_color = COLOR_SETTINGS["light"]["text_color"]
-                self.background_color = COLOR_SETTINGS["light"]["background_color"]
-                self.date_frame_color = COLOR_SETTINGS["light"]["date_frame_color"]
-                self.highlight_color = COLOR_SETTINGS["light"]["highlight_color"]
-                #ctk.set_appearance_mode("light")
+        else:
+            self.text_color = COLOR_SETTINGS["light"]["text_color"]
+            self.background_color = COLOR_SETTINGS["light"]["background_color"]
+            self.date_frame_color = COLOR_SETTINGS["light"]["date_frame_color"]
+            self.highlight_color = COLOR_SETTINGS["light"]["highlight_color"]
+            #ctk.set_appearance_mode("light")
 
     def set_app_appearance_mode(self, theme):
         ctk.set_appearance_mode(theme)
@@ -735,11 +715,11 @@ class CountdownApp:
         Validation:
             Uses validate_range() to ensure proper numeric input format
         """
-        
+
         entry = ctk.CTkEntry(
-            frame, 
-            width=58, 
-            font=FONT_SETTINGS["units"], 
+            frame,
+            width=58,
+            font=FONT_SETTINGS["units"],
             justify="center",
             validate="key",
             validatecommand=(self.root.register(lambda val: self.validate_range(val, field_type)), '%P')
@@ -761,7 +741,7 @@ class CountdownApp:
             return min_val <= int(value) <= max_val
 
         return True
-    
+
     def update_time(self):
         """
         Updates current time display and calculates time difference to target.
@@ -772,7 +752,7 @@ class CountdownApp:
 
         now = datetime.now()
         self.current_date_label.configure(text=f"{t_path('main_window.current_date_label')} {now.strftime('%d.%m.%Y %H:%M:%S')}")
-        
+
         # Check that all fields are filled in before converting to int
         try:
             year = self.target_year.get()
