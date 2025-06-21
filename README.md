@@ -1,5 +1,3 @@
-## Version: 1.7.0 [15.04.2025]
-
 # CustomTkinter-Countdown
 
 A versatile time calculator built with Python 3.13 and CustomTkinter that handles both:

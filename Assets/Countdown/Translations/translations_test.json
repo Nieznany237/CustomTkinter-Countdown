@@ -1,0 +1,68 @@
+{
+  "menubar": {
+    "file": {
+      "file": "Test Plik",
+      "load_file": "Wczytaj plik",
+      "save_file": "Zapisz plik",
+      "save_as": "Zapisz jako",
+      "exit": "Wyjście"
+    },
+    "appearance": {
+      "appearance": "Wygląd",
+      "dark_mode": "Tryb ciemny",
+      "light_mode": "Tryb jasny",
+      "zoom_in": "Powiększ",
+      "zoom_out": "Pomniejsz"
+    },
+    "settings": {
+      "settings": "Ustawienia",
+      "open_config_file": "Otwórz plik konfiguracyjny"
+    },
+    "about": {
+      "about": "O programie",
+      "about_this_app": "O tej aplikacji",
+      "get_program_path_debug": "Pokaż ścieżkę programu (Debug)",
+      "get_cache_info": "Pokaż informacje o cache"
+    }
+  },
+  "main_window": {
+    "warning_label": "Wszystkie informacje bez gwarancji",
+    "calculate_date": "Odasdasdasdasdas",
+    "target_entry": {
+      "year": "Rok",
+      "month": "Miesiąc",
+      "day": "Dzień",
+      "hour": "Godzina",
+      "minute": "Minuta",
+      "second": "Sekunda"
+    },
+    "current_date_label": "Aktualna data:",
+    "invalid_date": "Nieprawidłowa data!",
+    "empty_input": "Wypełnij wszystkie pola.",
+    "remaining_text": "Pozostało:",
+    "elapsed_text": "Minęło:",
+    "and": "oraz",
+    "in_other_words": "Inaczej:",
+    "plural_forms": {
+      "year": ["rok", "lata", "lat"],
+      "month": ["miesiąc", "miesiące", "miesięcy"],
+      "week": ["tydzień", "tygodnie", "tygodni"],
+      "day": ["dzień", "dni", "dni"],
+      "hour": ["godzina", "godziny", "godzin"],
+      "minute": ["minuta", "minuty", "minut"],
+      "second": ["sekunda", "sekundy", "sekund"]
+    }
+  },
+  "about_window": {
+    "about_window_title": "O aplikacji Countdown",
+    "program_info_description": {
+      "program_name": "Nazwa programu",
+      "version": "Wersja",
+      "author": "Autor",
+      "release_date": "Data wydania",
+      "first_release": "Pierwsze wydanie",
+      "licence": "Licencja",
+      "description": "Opis"
+    }
+  }
+}
