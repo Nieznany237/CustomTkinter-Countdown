@@ -1,7 +1,4 @@
-# This file contains hardcoded English translations for the application.
-# It is used when the application failed to load translations from the locale files.
-
-TRANSLATIONS_EN = {
+{
   "structure version": "1.2.0",
   
   "menubar": {

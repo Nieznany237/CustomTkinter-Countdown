@@ -17,8 +17,8 @@ current_file_path = ""
 
 # Application version and release date
 APP_VERSION = {
-    "version": "1.7.0",
-    "release_date": "15.04.2025"
+    "version": "1.7.1",
+    "release_date": "21.06.2025"
 }
 
 RESOURCE_FILE_PATHS = {
@@ -201,42 +201,76 @@ print("FONT_SETTINGS:", FONT_SETTINGS)
 print("APP_SETTINGS:", APP_SETTINGS)
 print("COLOR_SETTINGS:", COLOR_SETTINGS)
 '''
-print(APP_SETTINGS["Language"])
+print("Selected language:", APP_SETTINGS["Language"])
+# --- Translation loading from JSON and fallback to translation.py ---
+import importlib
 
-if APP_SETTINGS["Language"] == "pl":
-    # Load Polish translations
-    from translation import TRANSLATIONS_PL as TRANSLATIONS
-else:
-    # Load English translations
-    from translation import TRANSLATIONS_EN as TRANSLATIONS
+TRANSLATIONS = {}
+
+def load_translations(language_code):
+    """
+    Loads translations from a JSON file based on the language code (case-insensitive).
+    If JSON fails, falls back to translation.py TRANSLATIONS_EN.
+    Fallback order:
+    1. JSON for language_code (e.g., translations_au.json)
+    2. translation.py TRANSLATIONS_EN
+    """
+    lang_code = language_code.lower()
+    base_path = os.path.join("Assets", "Countdown", "Translations")
+    json_file = os.path.join(base_path, f"translations_{lang_code}.json")
+    # 1. Try JSON for requested language
+    try:
+        with open(json_file, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"[WARNING] Could not load translation file '{json_file}': {e}")
+    # 2. Fallback to translation.py TRANSLATIONS_EN
+    try:
+        translation_mod = importlib.import_module("translation")
+        if hasattr(translation_mod, "TRANSLATIONS_EN"):
+            return getattr(translation_mod, "TRANSLATIONS_EN")
+    except Exception as e:
+        print(f"[ERROR] Could not load fallback hardcoded English translation: {e}")
+    # If all fails, return empty dict
+    return {}
+
+TRANSLATIONS = load_translations(APP_SETTINGS["Language"])
 
 @lru_cache(maxsize=None)
 def t_path(path):
-
     """
     Retrieves a translation value from the TRANSLATIONS dictionary using a dot-separated path.
-    This is a helper function to easily access nested translation values.
-    Args:
-        path (str): Dot-separated path to the translation (e.g., "menubar.file.file")
-    Returns:
-        str: The translated string if found, or a placeholder string in format "[path]" if not found
-    Example:
-        >>> t_path("menubar.file.file")
-        "File"
-        >>> t_path("invalid.path")
-        "[invalid.path]"
-        
-    Note:
-        The function is a shortened version of get_translation_by_path (as suggested by the name)
+    Returns a string if found, otherwise a placeholder string.
+    If the value is not a string (e.g., list/dict), returns a placeholder.
     """
     keys = path.split(".")
     value = TRANSLATIONS
     try:
         for key in keys:
             value = value[key]
-        return value
-    except KeyError:
+        if isinstance(value, str):
+            return value
+        else:
+            return f"[{path}]"
+    except Exception:
         return f"[{path}]"
+
+def get_plural_form_list(path):
+    """
+    Retrieves a list (e.g., plural forms) from the TRANSLATIONS dictionary using a dot-separated path.
+    Returns the list if found, otherwise a list of placeholders.
+    """
+    keys = path.split(".")
+    value = TRANSLATIONS
+    try:
+        for key in keys:
+            value = value[key]
+        if isinstance(value, list):
+            return value
+        else:
+            return [f"[{path}]"]
+    except Exception:
+        return [f"[{path}]"]
 
 def get_cache_info():
     print(t_path.cache_info())
@@ -323,50 +357,28 @@ def set_window_icon(app):
         app.root.wm_iconbitmap()
 
 def pluralize_time_unit(value, singular, plural, genitive):
-    """
-    Helper function for inflecting time units in Polish language.
-    
-    :param value: numeric value
-    :param singular: singular form | forma pojedyncza (np. "rok")
-    :param plural: plural form | forma mnoga (np. "lata")
-    :param genitive: genitive form | forma dopełniacza (np. "lat")
-    :return: formatted string with value and correct word form
-    """
     value = int(value)
     formatted_value = "{:,}".format(value).replace(",", " ")
-    if value == 1: # singular form | forma pojedyncza
+    if value == 1:
         return f"{formatted_value} {singular}"
-    elif 2 <= value <= 4: # plural form | forma mnoga
-        return f"{formatted_value} {plural}" 
-    else: # genitive form | forma dopełniacza
+    elif 2 <= value <= 4:
+        return f"{formatted_value} {plural}"
+    else:
         return f"{formatted_value} {genitive}"
 
 def generate_time_texts(years, months, weeks, days, hours, minutes, seconds):
-    """
-    Generates text forms for time units.
-    
-    :param years: lata
-    :param months: miesiące
-    :param weeks: tygodnie
-    :param days: dni
-    :param hours: godziny
-    :param minutes: minuty
-    :param seconds: sekundy
-    :return: a tuple with formatted strings for each time unit
-    """
     return (
-        pluralize_time_unit(int(years), *t_path('main_window.plural_forms.year')),
-        pluralize_time_unit(int(months), *t_path("main_window.plural_forms.month")),
-        pluralize_time_unit(int(weeks), *t_path("main_window.plural_forms.week")),
-        pluralize_time_unit(int(days), *t_path("main_window.plural_forms.day")),
-        pluralize_time_unit(hours, *t_path("main_window.plural_forms.hour")),
-        pluralize_time_unit(minutes, *t_path("main_window.plural_forms.minute")),
-        pluralize_time_unit(seconds, *t_path("main_window.plural_forms.second"))
+        pluralize_time_unit(int(years), *get_plural_form_list('main_window.plural_forms.year')),
+        pluralize_time_unit(int(months), *get_plural_form_list('main_window.plural_forms.month')),
+        pluralize_time_unit(int(weeks), *get_plural_form_list('main_window.plural_forms.week')),
+        pluralize_time_unit(int(days), *get_plural_form_list('main_window.plural_forms.day')),
+        pluralize_time_unit(hours, *get_plural_form_list('main_window.plural_forms.hour')),
+        pluralize_time_unit(minutes, *get_plural_form_list('main_window.plural_forms.minute')),
+        pluralize_time_unit(seconds, *get_plural_form_list('main_window.plural_forms.second'))
     )
 
 def change_ui_scale(scale=0):
-    APP_SETTINGS["ui_zoom_factor"] += scale
-    
+    APP_SETTINGS["ui_zoom_factor"] += scale * 0.1
     APP_SETTINGS["ui_zoom_factor"] = round(APP_SETTINGS["ui_zoom_factor"], 3)
     print(f"UI zoom factor: {APP_SETTINGS['ui_zoom_factor']}")
     ctk.set_window_scaling(APP_SETTINGS["ui_zoom_factor"])
@@ -531,8 +543,8 @@ class CountdownApp:
         appearance_dropdown.add_option(option=t_path("menubar.appearance.dark_mode"), command=lambda: self.set_app_appearance_mode("dark"))
         appearance_dropdown.add_option(option=t_path("menubar.appearance.light_mode"), command=lambda: self.set_app_appearance_mode("light"))
         appearance_dropdown.add_separator()
-        appearance_dropdown.add_option(option=t_path("menubar.appearance.zoom_in"), command=lambda: change_ui_scale(0.1))
-        appearance_dropdown.add_option(option=t_path("menubar.appearance.zoom_out"), command=lambda: change_ui_scale(-0.1))
+        appearance_dropdown.add_option(option=t_path("menubar.appearance.zoom_in"), command=lambda: change_ui_scale(1))
+        appearance_dropdown.add_option(option=t_path("menubar.appearance.zoom_out"), command=lambda: change_ui_scale(-1))
 
         # Sekcja Config 
         settings_button = self.menu.add_cascade(t_path("menubar.settings.settings"))
@@ -847,35 +859,21 @@ class CountdownApp:
         self.total_time_label.configure(
             text=( 
                 f"{t_path('main_window.in_other_words')} {t_path('main_window.remaining_text') if mode == 'remaining' else t_path('main_window.elapsed_text')}\n"
-                
-                # x years, x months, x weeks, x days
-                f"{pluralize_time_unit(years, *t_path('main_window.plural_forms.year'))}, "
-                f"{pluralize_time_unit(months, *t_path('main_window.plural_forms.month'))}, "
-                f"{pluralize_time_unit(weeks, *t_path('main_window.plural_forms.week'))}, "
-                f"{pluralize_time_unit(days, *t_path('main_window.plural_forms.day'))}\n"
-
-                # x months, x days
-                f"{pluralize_time_unit(int(approx_months), *t_path('main_window.plural_forms.month'))}, "
-                f"{pluralize_time_unit(remaining_days_after_months, *t_path('main_window.plural_forms.day'))}\n"
-
-                # x weeks, x days
-                f"{pluralize_time_unit(total_weeks_approx, *t_path('main_window.plural_forms.week'))}, "
-                f"{pluralize_time_unit(int(remaining_days_after_weeks), *t_path('main_window.plural_forms.day'))}\n"
-
-                # x days, x hours
-                f"{pluralize_time_unit(int(total_days), *t_path('main_window.plural_forms.day'))}, "
-                f"{pluralize_time_unit(hours, *t_path('main_window.plural_forms.hour'))}\n"
-
-                # x hours, x minutes
-                f"{pluralize_time_unit(total_hours_approx, *t_path('main_window.plural_forms.hour'))}, "
-                f"{pluralize_time_unit(remaining_minutes_after_hours, *t_path('main_window.plural_forms.minute'))}\n"
-
-                # x minutes, x seconds
-                f"{pluralize_time_unit(total_minutes_approx, *t_path('main_window.plural_forms.minute'))}, "
-                f"{pluralize_time_unit(remaining_seconds_after_minutes, *t_path('main_window.plural_forms.second'))}\n"
-                
-                # x seconds
-                f"{pluralize_time_unit(int(total_seconds), *t_path('main_window.plural_forms.second'))}"
+                f"{pluralize_time_unit(years, *get_plural_form_list('main_window.plural_forms.year'))}, "
+                f"{pluralize_time_unit(months, *get_plural_form_list('main_window.plural_forms.month'))}, "
+                f"{pluralize_time_unit(weeks, *get_plural_form_list('main_window.plural_forms.week'))}, "
+                f"{pluralize_time_unit(days, *get_plural_form_list('main_window.plural_forms.day'))}\n"
+                f"{pluralize_time_unit(int(approx_months), *get_plural_form_list('main_window.plural_forms.month'))}, "
+                f"{pluralize_time_unit(remaining_days_after_months, *get_plural_form_list('main_window.plural_forms.day'))}\n"
+                f"{pluralize_time_unit(total_weeks_approx, *get_plural_form_list('main_window.plural_forms.week'))}, "
+                f"{pluralize_time_unit(int(remaining_days_after_weeks), *get_plural_form_list('main_window.plural_forms.day'))}\n"
+                f"{pluralize_time_unit(int(total_days), *get_plural_form_list('main_window.plural_forms.day'))}, "
+                f"{pluralize_time_unit(hours, *get_plural_form_list('main_window.plural_forms.hour'))}\n"
+                f"{pluralize_time_unit(total_hours_approx, *get_plural_form_list('main_window.plural_forms.hour'))}, "
+                f"{pluralize_time_unit(remaining_minutes_after_hours, *get_plural_form_list('main_window.plural_forms.minute'))}\n"
+                f"{pluralize_time_unit(total_minutes_approx, *get_plural_form_list('main_window.plural_forms.minute'))}, "
+                f"{pluralize_time_unit(remaining_seconds_after_minutes, *get_plural_form_list('main_window.plural_forms.second'))}\n"
+                f"{pluralize_time_unit(int(total_seconds), *get_plural_form_list('main_window.plural_forms.second'))}"
             )
         )
         
@@ -1000,8 +998,7 @@ class AboutWindow(ctk.CTkToplevel):
                     # For newer Linux systems
                     version = platform.freedesktop_os_release().get('PRETTY_NAME', 'Linux')
                 except:
-                    # Fallback for older systems
-                    version = platform.linux_distribution()[0] or 'Linux'
+                    version = 'Linux'
             elif system == "Darwin":
                 version = f"macOS {platform.mac_ver()[0]}"
             else:
