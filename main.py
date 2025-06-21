@@ -9,10 +9,8 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 from dateutil.relativedelta import relativedelta
 
-from PIL import Image, ImageTk
 import customtkinter as ctk
 from CTkMenuBar import CTkMenuBar, CustomDropdownMenu
-
 from modules.about_window import AboutWindow
 from modules.utils import  set_app_icon, get_program_path
 REQUIRED_JSON_VERSION = 9
